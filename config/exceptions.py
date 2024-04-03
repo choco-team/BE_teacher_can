@@ -1,67 +1,40 @@
-def api_exception_handelr(request, exc, api):
+def error_response(request, exc, api):
+    data = {
+        "path": request.path,
+        "method": request.method,
+        "path_params": (
+            request.resolver_match.kwargs if request.resolver_match.kwargs else None
+        ),
+        "query_params": (
+            request.environ["QUERY_STRING"] if request.environ["QUERY_STRING"] else None
+        ),
+        "body": request.body.decode() if request.body.decode() else None,
+        "detail": None,
+    }
+    try:
+        data["detail"] = exc.errors[0]
+    except:
+        data["detail"] = f"{exc.__str__()} {str(exc.__context__)}"
+
     return api.create_response(
         request,
         {
-            "code": exc.code,
-            "message": exc.message,
+            "success": False,
+            "code": exc.code if hasattr(exc, "code") else 1000,
+            "message": (
+                exc.message
+                if hasattr(exc, "message")
+                else "서버에서 에러가 발생했어요."
+            ),
+            "data": data,
         },
-        status=exc.status_code,
-    )
-
-
-def exception_handelr(request, exc, api):
-    data = {
-        "detail": None,
-        "path": request.path,
-        "method": request.method,
-        "path_params": (
-            request.resolver_match.kwargs if request.resolver_match.kwargs else None
-        ),
-        "query_params": (
-            request.environ["QUERY_STRING"] if request.environ["QUERY_STRING"] else None
-        ),
-        "body": request.body.decode() if request.body.decode() else None,
-    }
-    try:
-        data["detail"] = exc.errors()[0]
-    except:
-        data["detail"] = f"{exc.__str__()} {str(exc.__context__)}"
-    print("💣 서버 에러 발생!!!!\n", data)
-
-    return api.create_response(
-        request,
-        {"code": 1000, "message": "서버에서 에러가 발생했어요.", "data": data},
-        status=500,
-    )
-
-
-def validation_exception_handelr(request, exc, api):
-    data = {
-        "detail": exc.errors[0],
-        "path": request.path,
-        "method": request.method,
-        "path_params": (
-            request.resolver_match.kwargs if request.resolver_match.kwargs else None
-        ),
-        "query_params": (
-            request.environ["QUERY_STRING"] if request.environ["QUERY_STRING"] else None
-        ),
-        "body": request.body.decode() if request.body.decode() else None,
-    }
-    print("💣 ValidationError 발생!!!!\n", data)
-    return api.create_response(
-        request,
-        {"code": 1000, "message": "유효성 검사에서 문제가 발생했어요.", "data": data},
-        status=422,
+        status=exc.status_code if hasattr(exc, "status_code") else 500,
     )
 
 
 class APIException(Exception):
     def __init__(
-        self,
-        code: int = 1000,
-        message: str = "서버 에러",
-        status_code: int = 500,
+        self, code: int = 1000, message: str = "서버 에러", status_code: int = 500
     ):
         self.code = code
         self.message = message

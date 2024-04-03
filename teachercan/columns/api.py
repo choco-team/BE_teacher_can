@@ -37,7 +37,7 @@ def post_column_router(request, payload: schemas.PostColumnReq):
         new_column.save()
         for s in rows:
             s.save()
-    return {"message": "column이 성공적으로 저장되었습니다."}
+    return "column이 성공적으로 저장되었습니다."
 
 
 @router.put("", response=schemas.ColumnWithId)
@@ -64,4 +64,4 @@ def delete_column_router(request, column_id: int):
     if not column.student_list.user == request.auth:
         raise ex.not_access_permission
     column.delete()
-    return {"message": "column을 성공적으로 삭제했습니다."}
+    return "column을 성공적으로 삭제했습니다."

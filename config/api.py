@@ -11,38 +11,39 @@ from teachercan.student_lists.api import router as student_list_router
 from teachercan.columns.api import router as column_router
 
 
-api = NinjaAPI(renderer=DefaultRenderer())
+api = NinjaAPI(
+    renderer=DefaultRenderer(),
+    title="Teachercan API",
+)
 
 
 # token인증 예외처리
 @api.exception_handler(AuthenticationError)
 def auth_unavailable(request, exc):
-    return api.create_response(
-        request, {"code": 1001, "message": "로그인이 필요한 서비스에요."}, status=401
-    )
-
-
-# 커스텀 예외처리
-@api.exception_handler(ex.APIException)
-def exception_handelr(request, exc):
-    return ex.api_exception_handelr(request, exc, api)
+    exc.code = 1001
+    exc.message = "로그인이 필요한 서비스에요."
+    exc.status_code = 401
+    return ex.error_response(request, exc, api)
 
 
 # 유효성검사 예외처리
 @api.exception_handler(ValidationError)
 def exception_handelr(request, exc):
-    return ex.validation_exception_handelr(request, exc, api)
+    exc.code = 1003
+    exc.message = "유효성 검사에서 문제가 발생했어요."
+    exc.status_code = 422
+    return ex.error_response(request, exc, api)
 
 
-# 기본내장 예외처리(응답 ValidationError 포함)
+# 기타 예외처리
 @api.exception_handler(Exception)
 def exception_handelr(request, exc):
-    return ex.exception_handelr(request, exc, api)
+    return ex.error_response(request, exc, api)
 
 
-api.add_router("/auth/", auth_router)
-api.add_router("/user/", user_router)
-api.add_router("/student/", student_router)
-api.add_router("/school/", school_router)
-api.add_router("/student/list/", student_list_router)
-api.add_router("/column/", column_router)
+api.add_router("/auth", auth_router)
+api.add_router("/user", user_router)
+api.add_router("/student/list", student_list_router)
+# api.add_router("/student", student_router)
+api.add_router("/school", school_router)
+api.add_router("/column", column_router)

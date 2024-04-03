@@ -11,6 +11,39 @@ import config.exceptions as ex
 router = Router(auth=AuthBearer(), tags=["StudentList"])
 
 
+@router.put("/main")
+def put_student_list_main(request, payload: schemas.PutMainReq):
+    user = request.auth
+    try:
+        student_list = StudentList.objects.get(id=payload.id, user=user)
+    except ObjectDoesNotExist:
+        raise ex.not_found_student_list
+
+    # is_main == false 를 true로 바꿀 때
+    if not student_list.is_main and payload.is_main:
+        try:
+            main_student_list = StudentList.objects.get(user=user, is_main=True)
+        except ObjectDoesNotExist:
+            raise ex.not_found_student_list
+        main_student_list.is_main = False
+        student_list.is_main = payload.is_main
+        main_student_list.save()
+        student_list.save()
+    # is_main == true 를 false로 바꿀 때
+    elif student_list.is_main and not payload.is_main:
+        try:
+            recent_student_list = StudentList.objects.filter(
+                user=user, is_main=False
+            ).order_by("-updated_at")[0]
+        except ObjectDoesNotExist:
+            raise ex.not_found_student_list
+        recent_student_list.is_main = True
+        student_list.is_main = payload.is_main
+        recent_student_list.save()
+        student_list.save()
+    return "성공적으로 변경 되었습니다."
+
+
 @router.get("", response=schemas.GetStudentList)
 def get_student_list(request):
     """
@@ -77,39 +110,6 @@ def post_student_list(
     return new_student_list
 
 
-@router.put("/main/")
-def put_student_list_main(request, payload: schemas.PutMainReq):
-    user = request.auth
-    try:
-        student_list = StudentList.objects.get(id=payload.id, user=user)
-    except ObjectDoesNotExist:
-        raise ex.not_found_student_list
-
-    # is_main == false 를 true로 바꿀 때
-    if not student_list.is_main and payload.is_main:
-        try:
-            main_student_list = StudentList.objects.get(user=user, is_main=True)
-        except ObjectDoesNotExist:
-            raise ex.not_found_student_list
-        main_student_list.is_main = False
-        student_list.is_main = payload.is_main
-        main_student_list.save()
-        student_list.save()
-    # is_main == true 를 false로 바꿀 때
-    elif student_list.is_main and not payload.is_main:
-        try:
-            recent_student_list = StudentList.objects.filter(
-                user=user, is_main=False
-            ).order_by("-updated_at")[0]
-        except ObjectDoesNotExist:
-            raise ex.not_found_student_list
-        recent_student_list.is_main = True
-        student_list.is_main = payload.is_main
-        recent_student_list.save()
-        student_list.save()
-    return {"message": "성공적으로 변경 되었습니다."}
-
-
 @router.delete("/{list_id}")
 def delete_student_list(request, list_id: int):
     """
@@ -130,7 +130,7 @@ def delete_student_list(request, list_id: int):
         recent_student_list.is_main = True
         recent_student_list.save()
     student_list.delete()
-    return {"message": "성공적으로 삭제 되었어요."}
+    return "성공적으로 삭제 되었어요."
 
 
 @router.put("", response=schemas.StudentList)
