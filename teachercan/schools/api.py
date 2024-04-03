@@ -4,6 +4,7 @@ from ninja import Router, Query
 import requests
 
 from config.settings import NICE_API_KEY, NICE_URL
+from config import exceptions as ex
 from .schemas import SchoolIn, LunchIn, SchoolListOut, DayOrWeek, LunchOut
 from .models import School
 from ..auths.api import AuthBearer
@@ -31,7 +32,7 @@ def api_search_schools(
     try:
         response = requests.get(f"{NICE_URL}/schoolInfo", params=params).json()
     except:
-        raise Exception("나이스 요청 에러")
+        raise ex.nice_api_error
 
     try:
         school_info = response["schoolInfo"]
@@ -59,13 +60,11 @@ def api_search_schools(
         code = int(response["RESULT"]["CODE"].split("-")[1])
         # 200: 해당하는 데이터가 없습니다. / 336: 데이터요청은 한번에 최대 1,000건을 넘을 수 없습니다
         if code == 200:
-            # raise ex.NotFoundSchool()
-            raise Exception("해당 학교 없음")
+            raise ex.not_found_school
         elif code == 336:
-            # raise ex.TooLargeEntity()
-            raise Exception("데이터 요청 초과")
+            raise ex.too_large_entity
         else:
-            raise Exception()
+            raise ex.nice_api_error
 
 
 def create_school(code: str) -> School:
@@ -89,7 +88,7 @@ def list_school(request, payload: Query[SchoolIn]):
 def list_lunch_menu(request, payload: Query[LunchIn]):
     user = request.auth
     if not user.school:
-        raise Exception("유저의 학교 정보 없음")
+        raise ex.not_regist_school
 
     if payload.type == DayOrWeek.day:
         start_date = payload.date
@@ -97,7 +96,6 @@ def list_lunch_menu(request, payload: Query[LunchIn]):
     else:
         start_date = payload.date - timedelta(payload.date.weekday())
         end_date = start_date + timedelta(4)
-
     params = base_params.copy()
     params.update(
         {
@@ -117,7 +115,7 @@ def list_lunch_menu(request, payload: Query[LunchIn]):
         if code == 200:  # 200: 해당하는 데이터가 없습니다.
             return []
         else:
-            raise Exception("나이스 api 에러")
+            raise ex.nice_api_error
 
     # 스키마에 맞게 데이터 수정
     res_menu: list[str] = response["mealServiceDietInfo"][1]["row"]
