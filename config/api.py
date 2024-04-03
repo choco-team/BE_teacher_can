@@ -1,5 +1,6 @@
+from django.template import TemplateSyntaxError
 from ninja import NinjaAPI
-from ninja.errors import AuthenticationError, ValidationError
+from ninja.errors import AuthenticationError, ValidationError, HttpError
 
 from config import exceptions as ex
 from config.renderers import DefaultRenderer
