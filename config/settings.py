@@ -32,7 +32,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(" ")
-CSRF_TRUSTED_ORIGINS = env("ALLOWED_HOSTS").split(" ")
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(" ")
 
 
 # Application definition
@@ -59,11 +59,10 @@ LOCAL_APPS = [
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
-
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware,"
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -168,4 +167,4 @@ NICE_URL = "https://open.neis.go.kr/hub"
 NICE_API_KEY = env("NICE_API_KEY")
 
 # cors
-CORS_ORIGIN_WHITELIST = env("CORS_ORIGIN_WHITELIST").split(" ")
+CORS_ORIGIN_WHITELIST = env("CORS_ORIGINS").split(" ")
