@@ -183,10 +183,14 @@ def put_student_list(request, payload: schemas.PutStudentListReq):
             s.gender = student.gender
             if student_list.has_allergy and student.allergy:
                 s.allergy.set([Allergy.objects.get(pk=a) for a in student.allergy])
-            for row in student.rows:
+            for rowWithColumnId in student.columns:
                 try:
-                    r = Row.objects.get(column=col, student=s)
-                    r.value = row.value
+                    c = Column.objects.get(id=column.id)
+                except ObjectDoesNotExist:
+                    raise ex.not_found_column
+                try:
+                    r = Row.objects.get(column=c, student=s)
+                    r.value = rowWithColumnId.value
                     r.save()
                 except ObjectDoesNotExist:
                     raise ex.not_found_row
