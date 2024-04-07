@@ -40,7 +40,7 @@ class StudentUpdate(Schema):
     name: str = Field(..., alias="studentName")
     gender: Gender = Field(...)
     allergy: list[int] | None = Field(None)
-    rows: list[Row] = Field([])
+    columns: list[Row] = Field([])
 
 class BaseStudentList(Schema):
     id: int = Field(...)
