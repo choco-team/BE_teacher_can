@@ -14,5 +14,3 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 COPY . /app/
 
 WORKDIR /app
-
-# ENTRYPOINT [ "uvicorn", "app.main:app", "--host", "0.0.0.0" ]

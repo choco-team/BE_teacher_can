@@ -19,12 +19,13 @@ def get_user(request):
 @router.put("/info", response=InfoOut)
 def put_user(request, payload: InfoIn):
     user: User = request.auth
-    for attr, value in payload.dict().items():
+    for attr, value in payload.dict(exclude_unset=True).items():
         setattr(user, attr, value)
-    try:
-        school = School.objects.get(pk=payload.school_code)
-    except:
-        school = create_school(payload.school_code)
-    user.school = school
+    if payload.school_code:
+        try:
+            school = School.objects.get(pk=payload.school_code)
+        except:
+            school = create_school(payload.school_code)
+        user.school = school
     user.save()
     return user

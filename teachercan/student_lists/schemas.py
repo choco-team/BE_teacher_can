@@ -2,23 +2,28 @@ from datetime import datetime
 from ninja import Schema, Field
 from enum import Enum
 
+
 class Gender(str, Enum):
     남 = "남"
     여 = "여"
 
+
 class ColumnBase(Schema):
     field: str = Field(...)
 
+
 class Column(ColumnBase):
     id: int = Field(...)
+
 
 class Row(Schema):
     id: int = Field(...)
     value: str | None = Field(None)
 
+
 class BaseStudent(Schema):
-    number: int = Field(..., serialization_alias="studentNumber")
-    name: str = Field(..., serialization_alias="studentName")
+    studentNumber: int = Field(..., alias="number")
+    studentName: str = Field(..., alias="name")
     gender: Gender = Field(...)
     allergy: list[int] | None = Field(None)
 
@@ -41,14 +46,15 @@ class StudentUpdate(Schema):
     gender: Gender = Field(...)
     allergy: list[int] | None = Field(None)
     columns: list[Row] = Field([])
+      
 
 class BaseStudentList(Schema):
     id: int = Field(...)
     name: str = Field(...)
-    is_main: bool = Field(..., serialization_alias="isMain")
-    has_allergy: bool = Field(False, serialization_alias="hasAllergy")
-    created_at: datetime = Field(..., serialization_alias="createdAt")
-    updated_at: datetime = Field(..., serialization_alias="updatedAt")
+    isMain: bool = Field(..., alias="is_main")
+    hasAllergy: bool = Field(False, alias="has_allergy")
+    createdAt: datetime = Field(..., alias="created_at")
+    updatedAt: datetime = Field(..., alias="updated_at")
 
 
 class StudentList(BaseStudentList):
@@ -68,7 +74,7 @@ class PostStudentListReq(Schema):
 
 class PutMainReq(Schema):
     id: int
-    is_main: bool = Field(..., serialization_alias="isMain")
+    is_main: bool = Field(..., alias="isMain")
 
 
 class PutStudentListReq(Schema):

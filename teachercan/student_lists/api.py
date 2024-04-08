@@ -10,6 +10,17 @@ import config.exceptions as ex
 
 router = Router(auth=AuthBearer(), tags=["StudentList"])
 
+@router.put("/main")
+def put_student_list_main(request, payload: schemas.PutMainReq):
+    user = request.auth
+    student_list = StudentList.objects.get_student_list(id=payload.id, user=user)
+    StudentList.objects.update_main_student_list(
+        student_list=student_list, 
+        payload=payload, 
+        user=user
+    )
+    return {"message": "성공적으로 변경 되었습니다."}
+
 @router.get("", response=schemas.GetStudentList)
 def get_student_list(request):
     """
@@ -57,19 +68,6 @@ def post_student_list(
             Student.objects.create_student(payload=student, student_list=new_student_list)
     return new_student_list
 
-
-@router.put("/main/")
-def put_student_list_main(request, payload: schemas.PutMainReq):
-    user = request.auth
-    student_list = StudentList.objects.get_student_list(id=payload.id, user=user)
-    StudentList.objects.update_main_student_list(
-        student_list=student_list, 
-        payload=payload, 
-        user=user
-    )
-    return {"message": "성공적으로 변경 되었습니다."}
-
-
 @router.delete("/{list_id}")
 def delete_student_list(request, list_id: int):
     """
@@ -81,7 +79,7 @@ def delete_student_list(request, list_id: int):
     if student_list.is_main:
         StudentList.objects.make_recent_student_list_main(user=user)
     student_list.delete()
-    return {"message": "성공적으로 삭제 되었어요."}
+    return "성공적으로 삭제 되었어요."
 
 
 @router.put("", response=schemas.StudentList)
