@@ -79,7 +79,14 @@ class AuthApiTest(TestCase):
                 "success": False,
                 "code": 1102,
                 "message": "이메일이 이미 존재해요.",
-                "data": None,
+                "data": {
+                    "body": '{"email": "admin@admin.admin"}',
+                    "detail": "(1102, '이메일이 이미 존재해요.', 409) None",
+                    "method": "POST",
+                    "path": "/api/auth/signup/validation",
+                    "path_params": None,
+                    "query_params": None,
+                },
             },
         )
 
