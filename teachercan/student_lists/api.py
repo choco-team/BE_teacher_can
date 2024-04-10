@@ -10,39 +10,16 @@ import config.exceptions as ex
 
 router = Router(auth=AuthBearer(), tags=["StudentList"])
 
-
 @router.put("/main")
 def put_student_list_main(request, payload: schemas.PutMainReq):
     user = request.auth
-    try:
-        student_list = StudentList.objects.get(id=payload.id, user=user)
-    except ObjectDoesNotExist:
-        raise ex.not_found_student_list
-
-    # is_main == false 를 true로 바꿀 때
-    if not student_list.is_main and payload.is_main:
-        try:
-            main_student_list = StudentList.objects.get(user=user, is_main=True)
-        except ObjectDoesNotExist:
-            raise ex.not_found_student_list
-        main_student_list.is_main = False
-        student_list.is_main = payload.is_main
-        main_student_list.save()
-        student_list.save()
-    # is_main == true 를 false로 바꿀 때
-    elif student_list.is_main and not payload.is_main:
-        try:
-            recent_student_list = StudentList.objects.filter(
-                user=user, is_main=False
-            ).order_by("-updated_at")[0]
-        except ObjectDoesNotExist:
-            raise ex.not_found_student_list
-        recent_student_list.is_main = True
-        student_list.is_main = payload.is_main
-        recent_student_list.save()
-        student_list.save()
-    return "성공적으로 변경 되었습니다."
-
+    student_list = StudentList.objects.get_student_list(id=payload.id, user=user)
+    StudentList.objects.update_main_student_list(
+        student_list=student_list, 
+        payload=payload, 
+        user=user
+    )
+    return {"message": "성공적으로 변경 되었습니다."}
 
 @router.get("", response=schemas.GetStudentList)
 def get_student_list(request):
@@ -59,11 +36,7 @@ def get_student_list_by_id(request, list_id: int):
     특정 명렬표 보기(학생까지 보임)\n
     파라미터 값은 명렬표 id
     """
-    try:
-        student_list = StudentList.objects.get(id=list_id, user=request.auth)
-    except ObjectDoesNotExist:
-        raise ex.not_found_student_list
-    return student_list
+    return StudentList.objects.get_student_list(id=list_id, user=request.auth)
 
 
 @router.post("", response=schemas.StudentList)
@@ -89,26 +62,11 @@ def post_student_list(
         ]
     }
     """
-    user = request.auth
-    new_student_list = StudentList(
-        name=payload.name,
-        description=payload.description,
-        has_allergy=False,
-        is_main=not user.studentLists.count(),
-        user=user,
-    )
-    students = [
-        Student(
-            number=s.number, name=s.name, gender=s.gender, student_list=new_student_list
-        )
-        for s in payload.students
-    ]
     with transaction.atomic():
-        new_student_list.save()
-        for s in students:
-            s.save()
+        new_student_list = StudentList.objects.create_student_list(payload=payload, user = request.auth)
+        for student in payload.students:
+            Student.objects.create_student(payload=student, student_list=new_student_list)
     return new_student_list
-
 
 @router.delete("/{list_id}")
 def delete_student_list(request, list_id: int):
@@ -116,19 +74,10 @@ def delete_student_list(request, list_id: int):
     명렬표 지우기(학생까지 다 지워짐)\n
     파라미터 값은 명렬표 id
     """
-    try:
-        student_list = StudentList.objects.get(id=list_id, user=request.auth)
-    except ObjectDoesNotExist:
-        raise ex.not_found_student_list
-    if student_list.is_main == True:
-        try:
-            recent_student_list = StudentList.objects.filter(
-                user=request.auth, is_main=False
-            ).order_by("-updated_at")[0]
-        except ObjectDoesNotExist:
-            raise ex.not_found_student_list
-        recent_student_list.is_main = True
-        recent_student_list.save()
+    user = request.auth
+    student_list = StudentList.objects.get_student_list(id=list_id, user=user)
+    if student_list.is_main:
+        StudentList.objects.make_recent_student_list_main(user=user)
     student_list.delete()
     return "성공적으로 삭제 되었어요."
 
@@ -136,63 +85,14 @@ def delete_student_list(request, list_id: int):
 @router.put("", response=schemas.StudentList)
 def put_student_list(request, payload: schemas.PutStudentListReq):
     user = request.auth
-    try:
-        student_list = StudentList.objects.get(id=payload.id, user=user)
-    except ObjectDoesNotExist:
-        raise ex.not_found_student_list
-
+    student_list = StudentList.objects.get_student_list(id=payload.id, user=user)
     with transaction.atomic():
-        student_list.name = payload.name
-        student_list.description = payload.description
-        # is_main == false 를 true로 바꿀 때
-        if not student_list.is_main and payload.is_main:
-            try:
-                main_student_list = StudentList.objects.get(user=user, is_main=True)
-            except ObjectDoesNotExist:
-                raise ex.not_found_student_list
-            main_student_list.is_main = False
-            student_list.is_main = payload.is_main
-            main_student_list.save()
-        # is_main == true 를 false로 바꿀 때
-        elif student_list.is_main and not payload.is_main:
-            try:
-                recent_student_list = StudentList.objects.filter(
-                    user=user, is_main=False
-                ).order_by("-updated_at")[0]
-            except ObjectDoesNotExist:
-                raise ex.not_found_student_list
-            recent_student_list.is_main = True
-            student_list.is_main = payload.is_main
-            recent_student_list.save()
-        student_list.has_allergy = student_list.has_allergy
-        student_list.save()
+        # StudentList update
+        StudentList.objects.update_student_list(student_list=student_list, payload=payload, user=user)        
+        # Column update
         for column in payload.columns:
-            try:
-                col = Column.objects.get(id=column.id, student_list=student_list)
-            except ObjectDoesNotExist:
-                raise ex.not_found_column
-            col.field = column.field
-            col.save()
+            Column.objects.update_column(payload=column, student_list=student_list)
+        # Student update
         for student in payload.students:
-            try:
-                s = Student.objects.get(id=student.id, student_list=student_list)
-            except ObjectDoesNotExist:
-                raise ex.not_found_student
-            s.number = student.number
-            s.name = student.name
-            s.gender = student.gender
-            if student_list.has_allergy and student.allergy:
-                s.allergy.set([Allergy.objects.get(pk=a) for a in student.allergy])
-            for rowWithColumnId in student.columns:
-                try:
-                    c = Column.objects.get(id=column.id)
-                except ObjectDoesNotExist:
-                    raise ex.not_found_column
-                try:
-                    r = Row.objects.get(column=c, student=s)
-                    r.value = rowWithColumnId.value
-                    r.save()
-                except ObjectDoesNotExist:
-                    raise ex.not_found_row
-            s.save()
+            Student.objects.update_student(payload=student, student_list=student_list)
     return student_list
