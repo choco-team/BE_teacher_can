@@ -46,7 +46,7 @@ class StudentUpdate(Schema):
     gender: Gender = Field(...)
     allergy: list[int] | None = Field(None)
     columns: list[Row] = Field([])
-
+      
 
 class BaseStudentList(Schema):
     id: int = Field(...)
@@ -55,7 +55,6 @@ class BaseStudentList(Schema):
     hasAllergy: bool = Field(False, alias="has_allergy")
     createdAt: datetime = Field(..., alias="created_at")
     updatedAt: datetime = Field(..., alias="updated_at")
-    totalStudentNum: int = Field(..., alias="total_student_num")
 
 
 class StudentList(BaseStudentList):
