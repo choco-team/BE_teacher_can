@@ -10,16 +10,16 @@ import config.exceptions as ex
 
 router = Router(auth=AuthBearer(), tags=["StudentList"])
 
+
 @router.put("/main")
 def put_student_list_main(request, payload: schemas.PutMainReq):
     user = request.auth
     student_list = StudentList.objects.get_student_list(id=payload.id, user=user)
     StudentList.objects.update_main_student_list(
-        student_list=student_list, 
-        payload=payload, 
-        user=user
+        student_list=student_list, payload=payload, user=user
     )
     return {"message": "성공적으로 변경 되었습니다."}
+
 
 @router.get("", response=schemas.GetStudentList)
 def get_student_list(request):
@@ -27,7 +27,10 @@ def get_student_list(request):
     모든 명렬표 보기(학생은 안보임)\n
     로그인만 하면 별도의 파라미터 없음
     """
-    return {"studentList": StudentList.objects.filter(user=request.auth)}
+    student_lists = StudentList.objects.filter(user=request.auth)
+    for student_list in student_lists:
+        student_list.total_student_num = len(student_list.students.all())
+    return {"studentList": student_lists}
 
 
 @router.get("/{list_id}", response=schemas.StudentList)
@@ -63,10 +66,15 @@ def post_student_list(
     }
     """
     with transaction.atomic():
-        new_student_list = StudentList.objects.create_student_list(payload=payload, user = request.auth)
+        new_student_list = StudentList.objects.create_student_list(
+            payload=payload, user=request.auth
+        )
         for student in payload.students:
-            Student.objects.create_student(payload=student, student_list=new_student_list)
+            Student.objects.create_student(
+                payload=student, student_list=new_student_list
+            )
     return new_student_list
+
 
 @router.delete("/{list_id}")
 def delete_student_list(request, list_id: int):
@@ -88,7 +96,9 @@ def put_student_list(request, payload: schemas.PutStudentListReq):
     student_list = StudentList.objects.get_student_list(id=payload.id, user=user)
     with transaction.atomic():
         # StudentList update
-        StudentList.objects.update_student_list(student_list=student_list, payload=payload, user=user)        
+        StudentList.objects.update_student_list(
+            student_list=student_list, payload=payload, user=user
+        )
         # Column update
         for column in payload.columns:
             Column.objects.update_column(payload=column, student_list=student_list)

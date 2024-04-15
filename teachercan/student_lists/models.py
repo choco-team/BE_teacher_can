@@ -11,6 +11,7 @@ class CustomStudentListManager(models.Manager):
             student_list = self.get(id=id, user=user)
         except ObjectDoesNotExist:
             raise ex.not_found_student_list
+        student_list.total_student_num = len(student_list.students.all())
         return student_list
 
     def create_student_list(self, payload, user, **kwarg):
@@ -20,7 +21,6 @@ class CustomStudentListManager(models.Manager):
             has_allergy=False,
             is_main=not user.studentLists.count(),
             user=user,
-            total_student_num=len(payload.students),
         )
         new_student_list.save()
         return new_student_list
