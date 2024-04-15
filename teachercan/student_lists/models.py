@@ -12,7 +12,7 @@ class CustomStudentListManager(models.Manager):
         except ObjectDoesNotExist:
             raise ex.not_found_student_list
         return student_list
-    
+
     def create_student_list(self, payload, user, **kwarg):
         new_student_list = StudentList(
             name=payload.name,
@@ -20,20 +20,21 @@ class CustomStudentListManager(models.Manager):
             has_allergy=False,
             is_main=not user.studentLists.count(),
             user=user,
+            total_student_num=len(payload.students),
         )
         new_student_list.save()
         return new_student_list
-    
+
     def make_recent_student_list_main(self, user, **kwargs):
         try:
-            recent_student_list = self.filter(
-                user=user, is_main=False
-            ).order_by("-updated_at")[0]
+            recent_student_list = self.filter(user=user, is_main=False).order_by(
+                "-updated_at"
+            )[0]
         except ObjectDoesNotExist:
             raise ex.not_found_student_list
         recent_student_list.is_main = True
         recent_student_list.save()
-    
+
     def update_main_student_list(self, student_list, payload, user, **kwargs):
         # is_main == false 를 true로 바꿀 때
         if not student_list.is_main and payload.is_main:
@@ -52,9 +53,12 @@ class CustomStudentListManager(models.Manager):
     def update_student_list(self, student_list, payload, user, **kwargs):
         student_list.name = payload.name
         student_list.description = payload.description
-        self.update_main_student_list(student_list=student_list, payload=payload, user=user)
+        self.update_main_student_list(
+            student_list=student_list, payload=payload, user=user
+        )
         student_list.has_allergy = student_list.has_allergy
         student_list.save()
+
 
 class StudentList(models.Model):
     objects = CustomStudentListManager()
@@ -64,9 +68,11 @@ class StudentList(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     has_allergy = models.BooleanField(default=False)
     description = models.CharField(null=True, max_length=200)
+    total_student_num = models.IntegerField(null=True)
 
     user = models.ForeignKey(
-        to="users.User", on_delete=models.CASCADE, related_name='studentLists')
+        to="users.User", on_delete=models.CASCADE, related_name="studentLists"
+    )
 
     class Meta:
         db_table = "student_list"
