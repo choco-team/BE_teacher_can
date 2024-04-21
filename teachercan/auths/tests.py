@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 
 from django.test import TestCase, Client
@@ -79,7 +78,14 @@ class AuthApiTest(TestCase):
                 "success": False,
                 "code": 1102,
                 "message": "이메일이 이미 존재해요.",
-                "data": None,
+                "data": {
+                    "body": '{"email": "admin@admin.admin"}',
+                    "detail": "(1102, '이메일이 이미 존재해요.', 409) None",
+                    "method": "POST",
+                    "path": "/api/auth/signup/validation",
+                    "path_params": None,
+                    "query_params": None,
+                },
             },
         )
 
@@ -146,6 +152,7 @@ class AuthApiTest(TestCase):
         )
         self.assertEquals(response.status_code, 422)
 
+        # 아이디 중복
         response = self.client.post(
             "/api/auth/signup",
             {
@@ -158,4 +165,38 @@ class AuthApiTest(TestCase):
         self.assertEquals(response.status_code, 409)
 
     def test_signin(self):
-        response = self.client.post("/api/auth/signin", {"email": "admin"})
+        # 회원 가입
+        self.client.post(
+            "/api/auth/signup",
+            {
+                "email": "admin@admin.admin",
+                "password": "1234512345!!",
+                "nickname": "test_client",
+            },
+            content_type="application/json",
+        )
+
+        # 로그인 성공
+        response = self.client.post(
+            "/api/auth/signin",
+            {"email": "admin@admin.admin", "password": "1234512345!!"},
+            content_type="application/json",
+        )
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue("token" in response.json()["data"])
+
+        # 로그인 실패(아이디)
+        response = self.client.post(
+            "/api/auth/signin",
+            {"email": "admin2@admin.admin", "password": "1234512345!!"},
+            content_type="application/json",
+        )
+        self.assertEquals(response.status_code, 404)
+
+        # 로그인 실패(비밀번호)
+        response = self.client.post(
+            "/api/auth/signin",
+            {"email": "admin@admin.admin", "password": "1234512345!"},
+            content_type="application/json",
+        )
+        self.assertEquals(response.status_code, 401)
