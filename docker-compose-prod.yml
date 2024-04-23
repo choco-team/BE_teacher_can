@@ -3,23 +3,38 @@ version: "3"
 networks:
   nginx-network:
     driver: bridge
+  db-network:
+    driver: bridge
 
 services:
+  db:
+    image: postgres:14
+    container_name: db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    networks:
+      - nginx-network
+
   app:
     container_name: app
     build:
       context: .
       dockerfile: Dockerfile
     image: teachercan
+    depends_on:
+      - db
     env_file:
       - .env
     volumes:
-      - ./db.sqlite3:/app/db.sqlite3
+      # - ./db.sqlite3:/app/db.sqlite3
       - ./config:/app/config
       - ./teachercan:/app/teachercan
     command: python manage.py runserver 0.0.0.0:8000
     networks:
       - nginx-network
+      - db-network
       
   nginx:
     image: nginx:alpine
@@ -33,3 +48,6 @@ services:
       # - static:/code/static
     networks:
       - nginx-network
+
+volumes:
+  postgres_data:
