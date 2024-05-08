@@ -116,9 +116,15 @@ dnspython==2.6.1 ; python_version >= "3.11" and python_version < "4.0" \
 email-validator==2.1.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:200a70680ba08904be6d1eef729205cc0d687634399a5924d842533efb824b84 \
     --hash=sha256:97d882d174e2a65732fb43bfce81a3a834cbc1bde8bf419e30ef5ea976370a05
+gunicorn==22.0.0 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:350679f91b24062c86e386e198a15438d53a7a8207235a78ba1b53df4c4378d9 \
+    --hash=sha256:4a0b436239ff76fb33f11c07a16482c521a7e09c1ce3cc293c2330afe01bec63
 idna==3.6 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:9ecdbbd083b06798ae1e86adcbfe8ab1479cf864e4ee30fe4e46a003d12491ca \
     --hash=sha256:c05567e9c24a6b9faaa835c4821bad0590fbb9d5779e7caa6e1cc4978e7eb24f
+packaging==24.0 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5 \
+    --hash=sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9
 psycopg2-binary==2.9.9 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:03ef7df18daf2c4c07e2695e8cfd5ee7f748a1d54d802330985a78d2a5a6dca9 \
     --hash=sha256:0a602ea5aff39bb9fac6308e9c9d82b9a35c2bf288e184a816002c9fae930b77 \

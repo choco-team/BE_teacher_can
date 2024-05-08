@@ -21,6 +21,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: teachercan
+    ports:
+      - 8000:8000
     depends_on:
       - db
     env_file:

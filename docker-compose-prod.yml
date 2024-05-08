@@ -31,7 +31,7 @@ services:
       # - ./db.sqlite3:/app/db.sqlite3
       - ./config:/app/config
       - ./teachercan:/app/teachercan
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn config.wsgi -w 3 -b 0.0.0.0:8000
     networks:
       - nginx-network
       - db-network
